@@ -1,0 +1,662 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+		<style>
+			em {
+				font-style: unset!important;
+				color:coral;
+			}
+			.small-line {
+				font-size: 18px!important;
+				line-height: 1!important;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					<h2>JavaScript模块化简史</h2>
+					<p style="float: right;">—— 俞一腾 2018.07.21</p>
+				</section>
+				<section>
+					<h2>从零开始 —— 无工具篇</h2>
+				</section>
+				<section>
+					<section>
+						<p>假设我们当前没有模块化工具，<em>每个页面一个html文件，每个html文件里有一个js文件。</em></p>
+						<br>
+						<p>现在有一个场景:</p>
+						<p>把一个数组中，序号为偶数的元素变成相应正数</p>
+					</section>
+					<section>
+						<h3>一分钟搞定代码</h3>
+						<pre><code data-trim>
+							<script>
+								var arr = [0, -1, 2, -3, -4, 5];
+								for (var i = 0, l = arr.length; i < l; ++i) {
+									if (i % 2 == 0) {
+										arr[i] = arr[i] >= 0 ? arr[i] : - arr[i];
+									}
+								}
+								console.log(arr); //[0, -1, 2, -3, 4, 5]
+							</script>
+						</code></pre>
+						<p class="fragment">需求补充，在另一个页面，把一个数组中序号为奇数的元素变成相应正数</p>
+						<p class="fragment"><em>要求</em>: 十秒完成</p>										
+					</section>
+					<section>
+						<pre><code data-trim>
+						<script>
+							var arr = [0, -1, 2, -3, -4, 5];
+							for (var i = 0, l = arr.length; i < l; ++i) {
+								if (i % 2 == 1) {
+									arr[i] = arr[i] >= 0 ? arr[i] : - arr[i];
+								}
+							}
+							console.log(arr) // [0, 1, 2, 3, -4, 5]
+						</script>
+						</code></pre>
+						<p class="fragment">需求再补充，在另一个页面，把一个数组中序号为奇数的元素变成相应负数</p>
+						<p class="fragment">“前人是复制粘贴改的，代码也没问题，那我学着改”</p>
+					</section>
+					<section>
+						<pre><code data-trim>
+						<script>
+							var arr = [0, -1, 2, -3, -4, 5];
+							for (var i = 0, l = arr.length; i < l; ++i) {
+								if (i % 2 == 1) {
+									arr[i] = arr[i] < 0 ? arr[i] : - arr[i];
+								}
+							}
+							console.log(arr) // [0, 1, 2, 3, -4, 5]
+						</script>
+						</code></pre>
+						<p class="fragment">很轻松！很简单！编程使我快乐！</p>
+						<p class="fragment">但是会有什么<em>问题</em>呢？</p>
+					</section>
+				</section>
+				<section>
+					<section>
+						<p>三个月后...</p>
+						<p class="fragment"><em>需求大改！</em></p>
+						<ul class="fragment">
+							<li>数组序号是3的倍数的元素改成正数</li>
+							<li>数组序号是5的倍数的元素改成负数</li>
+							<li>既是3的倍数，又是5的倍数的元素，保持不变</li>
+						</ul>
+						<p class="fragment"><em>怎么办？</em></p>
+					</section>
+					<section>
+						<h4>现在我们有三份相似代码</h4>
+						<ul>
+							<li>把一个数组中，序号为偶数的元素变成相应正数</li>
+							<li>把一个数组中，序号为奇数的元素变成相应负数</li>
+							<li>把一个数组中，序号为偶数的元素变成相应负数</li>
+						</ul>
+						<p><br></p>
+						<h4 class="fragment">而现在需求是</h4>
+						<ul class="fragment">
+							<li>数组序号是3的倍数的元素改成正数</li>
+							<li>数组序号是5的倍数的元素改成负数</li>
+							<li>既是3的倍数，又是5的倍数的元素，保持不变</li>
+						</ul>
+						<p class="fragment">虽然需求改动，但可以<em>抽象</em>出一个结果</p>
+					</section>
+					<section>
+						<p>遍历一个数组，修改数组中符合要求的元素</p>
+						<pre class="fragment"><code data-trim>
+							<script>
+								function operate(num) {
+									//code
+								}								
+								function condition(index) {
+									//code
+								}
+								var arr = [0, -1, 2, -3, -4, 5];
+								arr = arr.map(function(val, index) {
+									return condition(index) ? operate(val) : val
+								});
+								console.log(arr);
+							</script>
+						</code></pre>
+					</section>
+					<section>
+						<h4>抽出代码，分离文件</h4>
+						<p class="small-line">数组序号是3的倍数的元素改成正数</p>
+						<p class="small-line">数组序号是5的倍数的元素改成负数</p>
+						<p class="small-line">既是3的倍数，又是5的倍数的元素，保持不变</p>
+						<pre><code data-trim>
+								//operations.js 
+								function abs(num) {
+									return num >= 0 ? num : - num;
+								}
+								function negative(num) {
+									return num < 0 ? num : - num;
+								}
+								//condition.js
+								function multipleOf(num, base) {
+									return num % base === 0;
+								}
+
+								//index.html
+								<script src="operations.js"></script>
+								<script src="condition.js"></script>
+								<script>
+									var arr = [0, -1, 2, -3, -4, 5];
+									arr = arr.map(function(val, index) {
+										if (multipleOf(index, 3) && !multipleOf(index, 5)) {
+											val = abs(val)
+										} else if (!multipleOf(index, 3) && multipleOf(index, 5)) {
+											val = negative(val)
+										}
+										return val
+									});
+									console.log(arr); 	//[0, -1, 2, 3, -4, -5]
+								</script>
+						</code></pre>
+					</section>
+					<section>
+						<h3>重构长代码，分离文件的好处</h3>
+						<ul>
+							<li>增加可读性，抽出的函数名等也有注释功能</li>
+							<li>减少耦合度，修改时可以专注当前函数的功能</li>
+							<li>方便单元测试</li>
+						</ul>
+						<p>总而言之，我们的把目标是：<em class="fragment">使代码易于修改</em></p>
+					</section>
+					<section>
+						<p>问题解决了！</p>
+						<p>不怕需求按照这个套路来改了！</p>
+						<p class="fragment small-line">代码越来越多，但文件的代码一多，就重构分离，还是比较好维护的</p>
+						<p class="fragment small-line">直到新入职的小明，写了一个判断数字是否是负数的函数</p>
+						<pre class="fragment"><code data-trim>
+							function negative(num) {
+								return num < 0;
+							}
+						</code></pre>
+						<p class="fragment">测试没问题！上线后发现，以前的需求坏了！为啥？</p>
+						<p class="fragment"><em>命名空间污染</em></p>
+					</section>
+					<section>
+						<p><em>怎么办？</em></p>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h3>用对象实现命名空间</h3>
+						<pre><code data-trim>
+							//operations.js
+							var Operation = {
+								abs: function(num) {
+									return num >= 0 ? num : - num;
+								},
+								negative: function(num) {
+									return num < 0 ? num : - num;
+								},
+								//other function
+							}
+						</code></pre>
+						<h4 class="fragment">减少了命名空间污染</h4>
+						<h4 class="fragment">好像可以称之为一个模块了</h4>
+					</section>
+					<section>
+						<p>新需求，如果数组元素值是1024，就不处理，怎么改写？</p>
+						<pre class="fragment"><code data-trim>
+							//operations.js
+							var Operation = {
+								reservedValue: 1024, 
+								abs: function(num) {
+									return num !== this.reservedValue && num >= 0 ? num : - num;
+								},
+								negative: function(num) {
+									return num !== this.reservedValue && num < 0 ? num : - num;
+								},
+								//other function
+							}
+						</code></pre>
+						<p class="fragment">但是不希望这个1024能够在console里面被查看，用对象可以实现吗？</p>
+					</section>
+					<section>
+						<h3>JS的对象没有私有变量，不安全</h3>
+						<h3 class="fragment">我们需要进一步的<em>模块封装</em></h3>
+					</section>
+				</section>
+				<section>
+					<section>
+						<p>JS中怎么实现私有变量？</p>
+						<p>利用作用域，使变量仅能被内部函数访问</p>						
+						<pre class="fragment"><code data-trim>
+							var getAdd = function() {
+								var base = 0;
+								return function() {
+									console.log(base++);
+								}
+							}
+							var add = getAdd();
+							add();
+							add();
+						</code></pre>
+						<blockquote class="fragment" 
+							cite="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Closures">
+							闭包是函数和声明该函数的词法环境的组合 —— MDN
+						</blockquote>
+					</section>
+					<section>
+						<p>函数getAdd如果仅被一次调用，这个名字就不需要了</p>
+						<pre class="fragment"><code data-trim>
+							var add = (function() {
+								var base = 0;
+								return function() {
+									console.log(base++);
+								}
+							})();
+							add();
+							add();
+						</code></pre>
+						<blockquote class="fragment" 
+							cite="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Closures">
+							IIFE(Immediately-Invoked Function Expression)立即调用函数表达式(或者说“自执行匿名函数”)
+						</blockquote>
+					</section>
+					<section>
+						<h3>结合IIFE</h3>
+						<pre class="fragment"><code data-trim>
+							//operations.js
+							var Operation = (function(){
+								var reservedValue = 1024;
+								return {
+									abs: function(num) {
+										return num === reservedValue || num >= 0 ? num : - num;
+									},
+									negative: function(num) {
+										return num === reservedValue || num < 0 ? num : - num;
+									},
+									//other function
+								}
+							})()
+						</code></pre>
+						<h4 class="fragment">保护了私有变量</h4>
+						<p class="fragment">不过这里的函数abs已经不是取绝对值了，其它地方也要用到，所以我们照例抽离</p>						
+					</section>
+					<section>
+						<pre class="fragment"><code data-trim>
+							//mathUtil.js
+							var MathUtil = (function(){
+								return {
+									abs: function(num) {
+										return num >= 0 ? num : - num;
+									},
+									negative: function(num) {
+										return num < 0 ? num : - num;
+									},
+								}
+							})()
+							//operation.js要怎么写，才能够调用对象MathUtil？
+
+
+							//operations.js
+							var Operation = (function(MathUtil){
+								var reservedValue = 1024;
+								return {
+									abs: function(num) {
+										return num !== reservedValue ? MathUtil.abs(num) : num;
+									},
+									negative: function(num) {
+										return num !== reservedValue ? MathUtil.negative(num) : num;
+									},
+									//other function
+								}
+							})(MathUtil)
+						</code></pre>
+						<h3 class="fragment">解决了<em>模块依赖</em>问题</h3>
+					</section>
+				</section>
+				<section>
+					<h3>当我们开始工程化开发</h3>
+					<pre><code data-trim>
+						<script type="text/javascript" src="./mathUtil.js"></script>
+						<script type="text/javascript" src="./operation.js"></script>
+						<script type="text/javascript" src="./condition.js"></script>
+						<script type="text/javascript" src="./arrayProcess.js"></script>
+						// other js files
+						<script type="text/javascript" src="./main.js"></script>
+					</code></pre>
+					<p>浏览器串行阻塞加载执行(除了使用defer或者async属性的情况)</p>
+					<p class="fragment">随着代码规模增加，新的问题出现了</p>
+					<ul class="fragment">
+						<li>我们不希望费劲地控制它们的书写顺序</li>
+						<li>我们希望能够更灵活控制他们的执行顺序</li>
+					</ul>
+				</section>
+				<section>
+					<h3>所以进一步的JS模块化需要注意这些问题</h3>
+					<ul>
+						<li>代码复用（这是自然</li>
+						<li>减少命名空间污染</li>
+						<li>模块封装</li>
+						<li>模块依赖解决方案</li>
+						<li>浏览器环境加载解决方案</li>
+					</ul>
+				</section>
+				<section>
+					<section>
+						<h3>LABjs</h3>
+						<img data-src="./images/labjs.jpg">
+					</section>
+					<section>
+						<h3>并行加载，控制执行顺序</h3>						
+						<pre><code data-trim>
+							<script type="text/javascript" src="./lab.js"></script>
+							<script>
+								$LAB
+								.script("first.js").wait()
+								.script("second1.js")
+								.script("second2.js").wait()
+								.script("third.js");
+							</script>
+						</code></pre>
+						<h4 class="fragment">但随着文件的增多，顺序维护还是非常麻烦</h4>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h3>YUI (Yahoo! User Interface Library)</h3>
+						<img data-src="./images/yui.jpg">
+						<h4 class="fragment">提供了很多交互组件，包括JS和CSS的资源</h4>
+					</section>
+					<section>
+						<h3>YUI2 命名空间式模块</h3>						
+						<pre><code data-trim>
+							<script type="text/javascript" src="../../../build/yahoo/yahoo.js"></script>
+							<script type="text/javascript" src="../../../build/dom/dom.js"></script>
+							<script type="text/javascript" src="../../../build/event/event.js"></script>
+							<script type="text/javascript" src="../../../build/logger/logger.js"></script>
+							<script type="text/javascript" src="../../../build/yuitest/yuitest.js"></script>
+							<script>
+								(function() {
+									var Dom=YAHOO.util.Dom,
+										Assert=YAHOO.util.Assert,
+										ObjectAssert=YAHOO.util.ObjectAssert,
+										ArrayAssert=YAHOO.util.ArrayAssert,
+										suite=new YAHOO.tool.TestSuite("yuisuite");
+									suite.add(new YAHOO.tool.TestCase({}));
+								})()
+							</script>
+						</code></pre>
+						<h4 class="fragment">但是长长的名字还是让人很恼火</h4>
+					</section>
+					<section>
+						<h3>YUI3 沙箱式模块</h3>
+						<pre><code data-trim>
+							<script>
+								// YUI - 编写模块
+								YUI.add('dom', function(Y) {
+								Y.DOM = { ... }
+								},'3.0.0',{
+									requires:['eventTarget']
+								})
+								
+								// YUI - 使用模块
+								YUI().use('dom', function(Y) {
+								Y.DOM.doSomeThing();
+								// use some methods DOM attach to Y
+								})
+							</script>
+						</code></pre>
+						<h4 class="fragment">只要记得模块的名字就好了</h4>
+					</section>
+					<section>
+						<h3>沙箱原理</h3>
+						<pre><code data-trim>
+							<script>
+								// Sandbox Implementation
+								function Sandbox() {
+									// ...
+									// initialize the required modules
+									for (i = 0; i < modules.length; i += 1) {
+										Sandbox.modules[modules[i]](this);
+									}
+									// ...
+								}
+							</script>
+						</code></pre>
+						<h4 class="fragment">把用到的模块和其依赖的模块注入沙盒</h4>
+					</section>
+					<section>
+						<h3>先添加模块再使用，不用在意顺序了</h3>
+						<pre><code data-trim>
+							<script type="text/javascript" src="/path/to/yui-min.js"></script>	// YUI seed
+							<script type="text/javascript" src="/path/to/my/module1.js"></script> // add('module1')
+							<script type="text/javascript" src="/path/to/my/module2.js"></script> // add('module2')
+							<script type="text/javascript" src="/path/to/my/module3.js"></script> // add('module3')
+							<script>
+								YUI().use('module1', 'module2', 'module3', function(Y) {
+									// you can use all this module now
+								});
+							</script>
+						</code></pre>
+						<h4 class="fragment">太多文件请求了怎么办？ —— YUI Combo</h4>
+					</section>
+					<section>
+						<h2>2014年8月29日，宣布停止维护</h2>
+						<ul>
+							<li>只是为了模块化的话，整个框架太重了</li>
+							<li>同时使用的模块不能有相同名称的方法注入沙箱</li>
+							<li>时代在进步</li>
+						</ul>
+					</section>
+				</section>
+				<section>
+					<section>
+						<p>在项目的很多js文件里</p>
+						<pre><code data-trim>
+							//define(function (require, exports, module) {	
+								var codeHere
+							//});
+						</code></pre>
+						<p class="fragment">这里发生过什么？</p>						
+					</section>
+					<section>
+						<pre><code data-trim>
+							(function () {
+								require('./common/polyfill');   //Polyfill
+								require('./common/ab_test'); // ABTest
+								require('./mod/referer'); // mark referer
+								require('./common/dropdown'); // dropdown
+								require('./common/header'); // header
+							})();
+						</code></pre>
+						<p class="fragment">require是什么？</p>
+						<p class="fragment">require的过程中发生了什么？</p>
+						<p class="fragment">为什么要用(function() {})()包起来？</p>
+					</section>
+					<section>
+						<pre><code data-trim>
+							module.exports = {
+								"init": init,
+								"get_info": get_info
+							};
+						</code></pre>
+						<p class="fragment">module.exports是什么？</p>
+						<pre class="fragment"><code data-trim>
+							exports.minusCount = minusCount;
+							exports.addCount = addCount;
+							exports.init = function () {}
+						</code></pre>
+						<p class="fragment">exports又是什么？</p>
+					</section>
+					<section>
+						<pre><code data-trim>
+							import Vue from "vue";
+							import VueConfig from "base/x.vue.config";
+							import VueResource from "vue-resource";
+						</code></pre>
+						<p class="fragment">import是什么？</p>
+						<pre class="fragment"><code data-trim>
+							export default {
+								name: 'index-app',
+								data () {
+									return {
+										banners: []
+									}
+								},
+								mixins: [track],
+								mounted () {
+								},
+								components: {...}
+							}
+							</script>
+						</code></pre>
+						<p class="fragment">export又是什么？</p>
+					</section>
+				</section>
+				<section>
+					<section>
+						<img data-src="./images/commonjs.jpeg">
+						<h4 class="fragment">不仅仅在浏览器，同样使用在服务器端</h4>						
+						<h4 class="fragment">是一个模块化标准，不是框架也不是工具，可以有不同的实现</h4>
+						<h4 class="fragment">目前是1.1.1版本？</h4>
+					</section>
+					<section>
+						<h3>Require & exports</h3>						
+						<pre><code data-trim>
+							// math.js
+							exports.add = function(a, b){
+								return a + b;
+							}
+
+							// main.js
+							var math = require('math')      // ./math in node
+							console.log(math.add(1, 2));    // 3
+						</code></pre>
+						<h4 class="fragment">自由变量（Free Variable）</h4>
+						<a class="fragment" href="http://wiki.commonjs.org/wiki/Modules/1.1.1">1.1.1版本规范</a>
+					</section>
+					<section>
+						<h4>NodeJS, 在服务器端运行js</h4>
+						<img data-src="./images/nodejs-architecture.jpg" height="400px">
+					</section>
+					<section>
+						<h4>CommonJS标准模块很好用<span class="fragment">, 在服务器端</span></h4>
+						<h4 class="fragment">但是在浏览器呢?</h4>
+						<pre class="fragment"><code data-trim>
+							//CommonJS Syntax
+							var Employee = require("types/Employee");
+							
+							function Programmer (){
+								//do something
+							}
+							
+							Programmer.prototype = new Employee();
+							
+							//如果require是异步的，那么肯定报错
+							//因为在执行这句前 Employee 模块根本来不及加载进来
+							//如果是同步的，未免太慢？
+						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h3>AMD && RequireJS</h3>						
+						<img data-src="./images/requirejs.jpeg">
+					</section>
+					<section>
+						<h3>CMD && SeaJS</h3>						
+						<img data-src="./images/seajs.jpg">
+					</section>
+					<section>
+						<h3>AMD VS CMD</h3>
+						<h4>写法的便利，文件载入的时机</h4>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h3>既然单纯的CommonJS标准在浏览器没法实行，那就在服务器端打包(bundle)好了再给服务器</h3>						
+						<img data-src="./images/browserify.png" height="200px">
+						<img data-src="./images/webpack.jpg" height="200px">					
+					</section>
+					<section>
+						<h3>打包的结果说明。 多次import会怎样。</h3>
+					</section>
+					<section>
+						<h3>不仅仅是模块化</h3>
+						<ul>
+							<li>watch</li>
+							<li>uglify</li>
+							<li>sourcemap</li>
+							<li>dev-server</li>
+						</ul>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h3>为什么JS有这么多幺蛾子？</h3>
+						<h4 class="fragment">因为JS语法中没有模块化</h4>					
+						<h4 class="fragment">直到ES6</h4>										
+					</section>
+					<section>
+						<h3>介绍ES6的语法</h3>
+					</section>
+				</section>
+				<section>
+					<h3>未来？</h3>
+				</section>
+				<section>
+					<h3>参考资料</h3>
+					<p>
+						<a href="https://medium.com/sungthecoder/javascript-module-module-loader-module-bundler-es6-module-confused-yet-6343510e7bde">Brief history of JavaScript Modules</a>
+					</p>
+					<p>
+						<a href="https://huangxuan.me/2015/07/09/js-module-7day/">JavaScript 模块化七日谈</a>
+					</p>
+					<p>
+						<a href="https://github.com/seajs/seajs/issues/547">前端模块化开发的价值</a>
+					</p>
+					<p>
+						<a href="https://github.com/seajs/seajs/issues/588">前端模块化开发那点历史</a>
+					</p>
+					<p>
+						<a href="https://zhuanlan.zhihu.com/p/26118022">精读 js 模块化发展</a>
+					</p>
+				</section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); hljs.configure({tabReplace: '    '})} }
+				]
+			});
+		</script>
+	</body>
+</html>
